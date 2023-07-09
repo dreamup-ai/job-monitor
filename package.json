@@ -1,0 +1,22 @@
+{
+  "name": "job-monitor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "source .env && node index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.363.0",
+    "axios": "1.4.0",
+    "winston": "3.9.0"
+  },
+  "engine": {
+    "node": "18.16.1"
+  }
+}
