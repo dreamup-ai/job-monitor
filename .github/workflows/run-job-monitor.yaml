@@ -10,9 +10,9 @@ on:
 env:
   AWS_REGION: 'us-east-1'
   API_ENDPOINT: 'https://dnmh5xqaek.execute-api.us-east-1.amazonaws.com/prod'
-  TEST_USER_EMAIL: secrets.TEST_USER_EMAIL
-  TEST_USER_PW: secrets.TEST_USER_PW
-  COGNITO_CLIENT_ID: secrets.COGNITO_CLIENT_ID
+  TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+  TEST_USER_PW: ${{ secrets.TEST_USER_PW }}
+  COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
   TIMEOUT_SECONDS: 15
   LOG_LEVEL: 'info'
   WAIT_SECONDS: 1
