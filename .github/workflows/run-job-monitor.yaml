@@ -3,6 +3,9 @@ name: Run Job Monitor
 on:
   schedule:
     - cron: '*/15 * * * *'
+  push:
+    branches:
+      - main
 
 env:
   AWS_REGION: 'us-east-1'
