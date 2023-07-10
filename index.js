@@ -159,7 +159,7 @@ const startJob = async () => {
       const elapsedTime = Date.now() - startTime
       if (elapsedTime >= timeout) {
         throw new Error(
-          `Job ${jobId} using model ${randomModel} took longer than ${timeout / 1000} secs to complete!`
+          `Job ${jobId} using model ${randomModel} took longer than ${timeout / 1000} secs to complete. Current status: ${jobStatus}.`
         )
       }
     }
