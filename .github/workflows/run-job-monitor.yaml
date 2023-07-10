@@ -32,7 +32,3 @@ jobs:
       run: |
         npm install
         npm start
-    notifications:
-      email:
-        recipients: <your-email>
-        on_failure: always
