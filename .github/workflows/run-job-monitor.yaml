@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'README.md'
 
 env:
   AWS_REGION: 'us-east-1'
@@ -30,3 +32,7 @@ jobs:
       run: |
         npm install
         npm start
+    notifications:
+      email:
+        recipients: <your-email>
+        on_failure: always

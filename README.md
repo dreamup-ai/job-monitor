@@ -1,6 +1,4 @@
-<p align="center">
-  <a href="https://github.com/dreamup-ai/job-monitor/actions/workflows/run-job-monitor.yaml"><img src="https://img.shields.io/github/actions/workflow/status/dreamup-ai/job-monitor/run-job-monitor.yaml?label=run-job-monitor&logo=github&style=plastic" alt="github workflow status"></a>
-</p>
+[![Run Job Monitor](https://github.com/dreamup-ai/job-monitor/actions/workflows/run-job-monitor.yaml/badge.svg)](https://github.com/dreamup-ai/job-monitor/actions/workflows/run-job-monitor.yaml)
 
 # job-monitor
 
