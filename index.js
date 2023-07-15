@@ -140,7 +140,7 @@ const startJob = async () => {
       responseGetJobStatus = await getJobStatus(jobId, idToken)
       
       jobStatus = responseGetJobStatus.data.status
-      
+
     } catch (err) {
       throw new Error(`Failed to get job status - ${err.message}`)
     }
