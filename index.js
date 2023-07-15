@@ -6,6 +6,7 @@ const API_ENDPOINT = process.env.API_ENDPOINT
 const LOG_LEVEL = process.env.LOG_LEVEL
 const TIMEOUT_SECONDS = process.env.TIMEOUT_SECONDS
 const WAIT_SECONDS = process.env.WAIT_SECONDS
+const START_TIMEOUT = process.env.START_TIMEOUT_SECONDS
 
 // Logging
 const logger = createLogger({
@@ -122,8 +123,10 @@ const startJob = async () => {
 
   let jobCompleted = false
   let jobFailed = false
+  let elapsedTime = ''
 
   const timeout = TIMEOUT_SECONDS * 1000
+  const startTimeout = START_TIMEOUT * 1000
   const startTime = Date.now()
 
   // get the job status
@@ -137,7 +140,7 @@ const startJob = async () => {
       responseGetJobStatus = await getJobStatus(jobId, idToken)
       
       jobStatus = responseGetJobStatus.data.status
-
+      
     } catch (err) {
       throw new Error(`Failed to get job status - ${err.message}`)
     }
@@ -155,8 +158,15 @@ const startJob = async () => {
       throw new Error(
         `Job ${jobId} failed! - ${JSON.stringify(responseGetJobStatus.data)}`
       )
+    } else if (jobStatus === 'queued') {
+      elapsedTime = Date.now() - startTime
+      if (elapsedTime >= startTimeout) {
+        throw new Error(
+          `Job ${jobId} using model ${randomModel} took longer than ${startTimeout / 1000} secs to start.`
+        )
+      }
     } else {
-      const elapsedTime = Date.now() - startTime
+      elapsedTime = Date.now() - startTime
       if (elapsedTime >= timeout) {
         throw new Error(
           `Job ${jobId} using model ${randomModel} took longer than ${timeout / 1000} secs to complete. Current status: ${jobStatus}.`
