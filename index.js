@@ -4,9 +4,9 @@ import { createLogger, format, transports } from 'winston'
 
 const API_ENDPOINT = process.env.API_ENDPOINT
 const LOG_LEVEL = process.env.LOG_LEVEL
-const TIMEOUT_SECONDS = process.env.TIMEOUT_SECONDS
 const WAIT_SECONDS = process.env.WAIT_SECONDS
-const QUEUED_TIMEOUT_SECONDS = process.env.QUEUED_TIMEOUT_SECONDS
+const QUEUE_TIMEOUT_WARNING = process.env.QUEUE_TIMEOUT_WARNING
+const QUEUE_TIMEOUT_MAX = process.env.QUEUE_TIMEOUT_MAX
 
 // Logging
 const logger = createLogger({
@@ -152,8 +152,9 @@ const startJob = async () => {
 
   // get the job status
   while (!jobCompleted && !jobFailed) {
-    const timeout = TIMEOUT_SECONDS * 1000
-    const queuedTimeout = QUEUED_TIMEOUT_SECONDS * 1000
+
+    const queuedTimeoutWarning = QUEUE_TIMEOUT_WARNING * 1000
+    const queuedTimeoutMax = QUEUE_TIMEOUT_MAX * 1000
 
     let responseGetJobStatus = ''
     let jobStatus = ''
@@ -162,6 +163,7 @@ const startJob = async () => {
       responseGetJobStatus = await getJobStatus(jobId, idToken)
 
       jobStatus = responseGetJobStatus.data.status
+
     } catch (err) {
       throw new Error(
         JSON.stringify({
@@ -171,19 +173,7 @@ const startJob = async () => {
       )
     }
 
-    if (jobStatus === 'queued') {
-      elapsedTime = Date.now() - startTime
-
-      if (elapsedTime >= queuedTimeout) {
-        throw new Error(
-          JSON.stringify({
-            error: `Job hasn't started after ${queuedTimeout / 1000} secs`,
-            jobId: jobId,
-            model: randomModel
-          })
-        )
-      }
-    } else if (jobStatus === 'running' && !queuedTime) {
+    if (jobStatus === 'running' && !queuedTime) {
       jobRunning = true
 
       queuedTime = Date.now() - startTime
@@ -193,6 +183,21 @@ const startJob = async () => {
       runningTime = (Date.now() - startTime - queuedTime) / 1000
 
       jobTime = (Date.now() - startTime) / 1000
+
+      if (queuedTime >= queuedTimeoutWarning) {
+        throw new Error(
+          JSON.stringify({
+            error: `Job took more than usual to start - ${
+              queuedTime / 1000
+            } secs.`,
+            queued_time: queuedTime / 1000,
+            running_time: runningTime,
+            job_time: jobTime,
+            jobId: jobId,
+            model: randomModel
+          })
+        )
+      }
 
       logger.info(
         JSON.stringify({
@@ -212,6 +217,19 @@ const startJob = async () => {
         runningTime = 0
       }
 
+      if (queuedTime >= queuedTimeoutWarning) {
+        throw new Error(
+          JSON.stringify({
+            error: `Job took ${queuedTime / 1000} secs to start running, which is more than usual, and then failed`,
+            queued_time: queuedTime / 1000,
+            running_time: runningTime,
+            job_time: jobTime,
+            jobId: jobId,
+            model: randomModel
+          })
+        )
+      }
+
       throw new Error(
         JSON.stringify({
           error: 'Job failed',
@@ -224,21 +242,51 @@ const startJob = async () => {
     } else {
       elapsedTime = Date.now() - startTime
 
-      if (elapsedTime >= timeout) {
-        runningTime = (Date.now() - startTime - queuedTime) / 1000
+      if (elapsedTime >= queuedTimeoutMax) {
 
-        jobTime = (Date.now() - startTime) / 1000
+        if (jobRunning) {
+          runningTime = (Date.now() - startTime - queuedTime) / 1000
 
-        throw new Error(
-          JSON.stringify({
-            error: `Job took longer than ${timeout / 1000} secs to complete`,
-            current_status: jobStatus,
-            jobId: jobId,
-            model: randomModel,
-            queued_time: queuedTime / 1000,
-            running_time: runningTime
-          })
-        )
+          throw new Error(
+            JSON.stringify({
+              error: `Job took longer than ${
+                queuedTimeoutMax / 1000
+              } secs running to complete`,
+              current_status: jobStatus,
+              jobId: jobId,
+              model: randomModel,
+              queued_time: queuedTime / 1000,
+              running_time: runningTime
+            })
+          )
+        } else if (!queuedTime) {
+          throw new Error(
+            JSON.stringify({
+              error: `Job hasn't started running after ${
+                queuedTimeoutMax / 1000
+                } secs`,
+              current_status: jobStatus,
+              jobId: jobId,
+              model: randomModel,
+            })
+          )
+        } else {
+
+          runningTime = (Date.now() - startTime - queuedTime) / 1000
+
+          throw new Error(
+            JSON.stringify({
+              error: `Job took longer than ${
+                queuedTimeoutMax / 1000
+              } secs to complete`,
+              current_status: jobStatus,
+              jobId: jobId,
+              model: randomModel,
+              queued_time: queuedTime / 1000,
+              running_time: runningTime
+            })
+          )
+        }
       }
     }
     if (jobStatus !== 'completed' && jobStatus !== 'failed') {
