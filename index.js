@@ -70,7 +70,12 @@ const startJob = async () => {
   try {
     idToken = await generateIdToken()
   } catch (err) {
-    throw new Error(`{ "error": "Failed to get the id token from cognito","errorMessage": "${err.message}" }`)
+    throw new Error(
+      JSON.stringify({
+        error: 'Failed to get the id token from cognito',
+        errorMessage: err.message
+      })
+    )
   }
 
   // get the models
@@ -78,13 +83,16 @@ const startJob = async () => {
   let models = ''
 
   try {
-
     responseModels = await getSDModels(idToken)
 
     models = responseModels.data
-
   } catch (err) {
-    throw new Error(`{ "error": "Failed to get SD models","errorMessage": "${err.message}" }`)
+    throw new Error(
+      JSON.stringify({
+        error: 'Failed to get SD models',
+        errorMessage: err.message
+      })
+    )
   }
 
   // for each id in models, add to array
@@ -104,7 +112,7 @@ const startJob = async () => {
 
     logger.debug(`randomModel: ${randomModel}`)
   } else {
-    throw new Error(`{ "error": "No models found" }`)
+    throw new Error(JSON.stringify({ error: 'No models found' }))
   }
 
   // submit the job
@@ -118,10 +126,20 @@ const startJob = async () => {
     jobId = responseJob.data.job_id
     startTime = Date.now()
 
-    logger.info(`{ "message": Job submitted successfully,"jobId": "${responseJob.data.job_id}","model": "${randomModel}" }`)
-
+    logger.info(
+      JSON.stringify({
+        message: 'Job submitted successfully',
+        jobId: responseJob.data.job_id,
+        model: randomModel
+      })
+    )
   } catch (err) {
-    throw new Error(`{ "error": Failed to submit the job,"errorMessage": "${err.message}" }`)
+    throw new Error(
+      JSON.stringify({
+        error: 'Failed to submit the job',
+        errorMessage: err.message
+      })
+    )
   }
 
   let jobCompleted = false
@@ -134,7 +152,6 @@ const startJob = async () => {
 
   // get the job status
   while (!jobCompleted && !jobFailed) {
-
     const timeout = TIMEOUT_SECONDS * 1000
     const queuedTimeout = QUEUED_TIMEOUT_SECONDS * 1000
 
@@ -142,45 +159,51 @@ const startJob = async () => {
     let jobStatus = ''
 
     try {
-
       responseGetJobStatus = await getJobStatus(jobId, idToken)
-      
-      jobStatus = responseGetJobStatus.data.status
 
+      jobStatus = responseGetJobStatus.data.status
     } catch (err) {
-      throw new Error(`{ "error": Failed to get job status,"errorMessage": "${err.message}" }`)
+      throw new Error(
+        JSON.stringify({
+          error: 'Failed to get job status',
+          errorMessage: err.message
+        })
+      )
     }
 
     if (jobStatus === 'queued') {
-
       elapsedTime = Date.now() - startTime
-      
-      if (elapsedTime >= queuedTimeout) {
 
+      if (elapsedTime >= queuedTimeout) {
         throw new Error(
-          `{ "error": Job hasn't started after ${
-            queuedTimeout / 1000
-          } secs,"jobId": ${jobId},"model":"${randomModel}" }`
+          JSON.stringify({
+            error: `Job hasn't started after ${queuedTimeout / 1000} secs`,
+            jobId: jobId,
+            model: randomModel
+          })
         )
       }
     } else if (jobStatus === 'running' && !queuedTime) {
-
       jobRunning = true
 
       queuedTime = Date.now() - startTime
-
     } else if (jobStatus === 'completed') {
-
       jobCompleted = true
 
       runningTime = (Date.now() - startTime - queuedTime) / 1000
 
       jobTime = (Date.now() - startTime) / 1000
 
-      logger.info(`{ "message": "Job completed successfully","queued_time": ${queuedTime / 1000},"running_time": ${runningTime},"job_time": ${jobTime},"model": "${randomModel}" }`)
-
+      logger.info(
+        JSON.stringify({
+          message: 'Job completed successfully',
+          queued_time: queuedTime / 1000,
+          running_time: runningTime,
+          job_time: jobTime,
+          model: randomModel
+        })
+      )
     } else if (jobStatus === 'failed') {
-
       jobFailed = true
 
       if (jobRunning) {
@@ -190,25 +213,35 @@ const startJob = async () => {
       }
 
       throw new Error(
-        `{ "error": Job failed,"jobId": "${jobId}","model":"${randomModel}","queued_time": ${queuedTime / 1000},"running_time": ${runningTime} }`
+        JSON.stringify({
+          error: 'Job failed',
+          jobId: jobId,
+          model: randomModel,
+          queued_time: queuedTime / 1000,
+          running_time: runningTime
+        })
       )
     } else {
-
       elapsedTime = Date.now() - startTime
 
       if (elapsedTime >= timeout) {
-
         runningTime = (Date.now() - startTime - queuedTime) / 1000
 
         jobTime = (Date.now() - startTime) / 1000
 
         throw new Error(
-          `{ "error": Job took longer than ${timeout / 1000} secs to complete,"current_status": "${jobStatus}","jobId": "${jobId}","model":"${randomModel}","queued_time": ${queuedTime / 1000},"running_time": ${runningTime} }`
+          JSON.stringify({
+            error: `Job took longer than ${timeout / 1000} secs to complete`,
+            current_status: jobStatus,
+            jobId: jobId,
+            model: randomModel,
+            queued_time: queuedTime / 1000,
+            running_time: runningTime
+          })
         )
       }
     }
     if (jobStatus !== 'completed' && jobStatus !== 'failed') {
-
       logger.debug(
         `Job ${jobId} still running - current status: ${jobStatus} - Trying again in 1 sec...`
       )
@@ -216,7 +249,7 @@ const startJob = async () => {
       const waitTime = WAIT_SECONDS * 1000
 
       await new Promise((resolve) => setTimeout(resolve, waitTime)) // Wait for 1 second
-  
+
       continue
     }
   }
