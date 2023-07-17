@@ -126,6 +126,7 @@ const startJob = async () => {
 
   let jobCompleted = false
   let jobFailed = false
+  let jobRunning = false
   let queuedTime = 0
   let runningTime = 0
   let jobTime = 0
@@ -164,6 +165,8 @@ const startJob = async () => {
       }
     } else if (jobStatus === 'running' && !queuedTime) {
 
+      jobRunning = true
+
       queuedTime = Date.now() - startTime
 
     } else if (jobStatus === 'completed') {
@@ -179,6 +182,12 @@ const startJob = async () => {
     } else if (jobStatus === 'failed') {
 
       jobFailed = true
+
+      if (jobRunning) {
+        runningTime = (Date.now() - startTime - queuedTime) / 1000
+      } else {
+        runningTime = 0
+      }
 
       throw new Error(
         `{ "error": Job failed,"jobId": "${jobId}","model":"${randomModel}","queued_time": ${queuedTime / 1000},"running_time": ${runningTime} }`
