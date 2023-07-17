@@ -33,21 +33,3 @@ jobs:
       run: |
         npm install
         npm start
-  # debug:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Print
-  #       run: env | sort
-  # notify-on-failure:
-  #   needs: run-job-monitor
-  #   runs-on: ubuntu-latest
-  #   if: failure()
-
-  #   steps:
-  #   - name: Notify on failure
-  #     env:
-  #       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-  #     uses: Ilshidur/action-discord@master
-  #     with:
-  #       args: 'Job Failed: {{ GITHUB_ACTION }} - {{ GITHUB_REPOSITORY }}'
