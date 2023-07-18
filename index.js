@@ -2,11 +2,13 @@ import axios from 'axios'
 import { generateIdToken } from './cognitoAuth.js'
 import { createLogger, format, transports } from 'winston'
 
-const API_ENDPOINT = process.env.API_ENDPOINT
-const LOG_LEVEL = process.env.LOG_LEVEL
-const WAIT_SECONDS = process.env.WAIT_SECONDS
-const QUEUE_TIMEOUT_WARNING = process.env.QUEUE_TIMEOUT_WARNING
-const QUEUE_TIMEOUT_MAX = process.env.QUEUE_TIMEOUT_MAX
+const {
+  API_ENDPOINT,
+  LOG_LEVEL,
+  WAIT_SECONDS,
+  QUEUE_TIMEOUT_WARNING,
+  QUEUE_TIMEOUT_MAX
+} = process.env
 
 // Logging
 const logger = createLogger({
