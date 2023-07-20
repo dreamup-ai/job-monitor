@@ -23,6 +23,8 @@ env:
 jobs:
   run-job-monitor:
     runs-on: ubuntu-latest
+    outputs:
+      error-message: ${{ steps.set-error-message.outputs.ERROR_MESSAGE }}
 
     steps:
     - uses: actions/checkout@v3
@@ -32,4 +34,20 @@ jobs:
     - name: Run job monitor
       run: |
         npm install
-        npm start
+        npm start 2>&1 | tee output.log
+    - name: Set error message
+      id: set-error-message
+      if: ${{ failure() }}
+      run: echo "ERROR_MESSAGE=$(cat output.log | grep 'Error:')" >> "$GITHUB_OUTPUT"
+  notify-on-failure:
+    needs: run-job-monitor
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+    - name: Notify on failure
+      env:
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        ERROR_MESSAGE: ${{ needs.run-job-monitor.outputs.error-message }}
+      uses: Ilshidur/action-discord@master
+      with:
+        args: '**{{ GITHUB_WORKFLOW }}** workflow on **{{ GITHUB_REPOSITORY }}** failed with: ```{{ ERROR_MESSAGE }}``` [More details]({{ GITHUB_SERVER_URL }}/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }})'
