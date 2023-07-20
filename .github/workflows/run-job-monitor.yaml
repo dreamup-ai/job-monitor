@@ -23,8 +23,6 @@ env:
 jobs:
   run-job-monitor:
     runs-on: ubuntu-latest
-    outputs:
-      error-message: ${{ steps.set-error-message.outputs.ERROR_MESSAGE }}
 
     steps:
     - uses: actions/checkout@v3
@@ -52,3 +50,4 @@ jobs:
       uses: Ilshidur/action-discord@master
       with:
         args: '**{{ GITHUB_WORKFLOW }}** workflow on **{{ GITHUB_REPOSITORY }}** failed with: ```{{ ERROR_MESSAGE }}``` [More details]({{ GITHUB_SERVER_URL }}/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }})'
+        
