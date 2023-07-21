@@ -31,6 +31,7 @@ jobs:
         node-version: '18'
     - name: Run job monitor
       id: run-job-monitor
+      shell: bash
       run: |
         npm install
         npm start 2>&1 | tee output.log
