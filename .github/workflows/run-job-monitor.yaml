@@ -33,6 +33,7 @@ jobs:
         node-version: '18'
     - name: Run job monitor
       id: run-job-monitor
+      shell: bash
       run: |
         npm install
         npm start 2>&1 | tee output.log
@@ -51,4 +52,4 @@ jobs:
         ERROR_MESSAGE: ${{ needs.run-job-monitor.outputs.error-message }}
       uses: Ilshidur/action-discord@master
       with:
-        args: '**{{ GITHUB_WORKFLOW }}** workflow on **{{ GITHUB_REPOSITORY }}** failed with: ```{{ ERROR_MESSAGE }}``` [More details]({{ GITHUB_SERVER_URL }}/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }})'
+        args: 'TEST - IGNORE - **{{ GITHUB_WORKFLOW }}** workflow on **{{ GITHUB_REPOSITORY }}** failed with: ```{{ ERROR_MESSAGE }}``` [More details]({{ GITHUB_SERVER_URL }}/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }})'
