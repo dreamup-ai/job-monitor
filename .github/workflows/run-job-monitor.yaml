@@ -36,12 +36,12 @@ jobs:
         npm start 2>&1 | tee output.log
     - name: Set error message on failure
       id: set-error-message
-      if: ${{ failure() && steps.run-job-monitor.outcome == 'failure' }}
+      if: ${{ always() && steps.run-job-monitor.outcome == 'failure' }}
       run: echo "ERROR_MESSAGE=$(cat output.log | grep 'Error:')" >> "$GITHUB_OUTPUT"
   notify-on-failure:
     needs: run-job-monitor
     runs-on: ubuntu-latest
-    if: ${{ failure() }}
+    if: ${{ always() && needs.run-job-monitor.outputs.error-message != '' }}
     steps:
     - name: Notify on failure
       env:
