@@ -23,7 +23,8 @@ env:
 jobs:
   run-job-monitor:
     runs-on: ubuntu-latest
-
+    outputs:
+       error-message: ${{ steps.set-error-message.outputs.ERROR_MESSAGE }}
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
